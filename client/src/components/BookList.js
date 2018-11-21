@@ -1,4 +1,15 @@
 import React, { Component } from 'react';
+import { gql } from 'apollo-boost';
+import { graphql } from 'react-apollo'; // glue query to component
+
+const getBooksQuery = gql`
+  {
+    books {
+      name
+      id
+    }
+  }
+`
 
 class BookList extends Component {
   render() {
@@ -12,4 +23,5 @@ class BookList extends Component {
   }
 }
 
-export default BookList;
+// bind query results to this component's props
+export default graphql(getBooksQuery)(BookList);
