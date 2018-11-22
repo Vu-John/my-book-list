@@ -93,6 +93,16 @@ const RootQuery = new GraphQLObjectType({
                 // return authors
                 return Author.find({});
             }
+        },
+        bookSearch: {
+            type: new GraphQLList(BookType),
+            args: {name: {type: GraphQLString}},
+            resolve(parent, args) {
+                if(args.name === '' || args.name === undefined) {
+                    return [];
+                }
+                return Book.find({name: new RegExp(args.name, 'i')});
+            }
         }
     }
 });

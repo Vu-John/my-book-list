@@ -62,19 +62,6 @@ form input, form select{
   box-sizing: border-box;
 }
 
-form button{
-  color: #fff;
-  font-size: 2em;
-  background: #AD1457;
-  border: 0;
-  padding: 0 10px;
-  border-radius: 50%;
-  cursor: pointer;
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-}
-
 #book-details{
   position: fixed;
   top: 0;

@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo'; // glue query to component
+import { graphql } from 'react-apollo';
 import { getBooksQuery } from '../queries/queries'
 
 // components
 import BookDetails from './BookDetails';
+import BookSearch from './BookSearch';
 
 class BookList extends Component {
   state = {
@@ -29,6 +30,7 @@ class BookList extends Component {
         <ul id="book-list">
           {this.renderBooks()}
         </ul>
+        <BookSearch />
         <BookDetails 
           bookId = {this.state.selected}
         />
