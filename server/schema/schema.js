@@ -1,5 +1,5 @@
 const graphql = require('graphql');
-// const _ = require('lodash'); // use to look through array (Alternative use vanilla JavaScript)
+const fetch = require('node-fetch');
 const Book = require('../models/book');
 const Author = require('../models/author');
 
@@ -13,16 +13,64 @@ const {
     GraphQLNonNull
 } = graphql; // grab function from package graphql
 
-// var books = [
-//     {name:'Name of book 1', genre:'Horror',id:'1', authorId:'1'},
-//     {name:'Name of book 2', genre:'Fiction',id:'2', authorId:'2'},
-// ];
+//
+// Google Books
+//
+function fetchResponseByURL(relativeURL) {
+    return fetch(`${process.env.GOOGLE_BOOKS_URL}${relativeURL}key=${process.env.GOOGLE_API_KEY}`).then(res => res.json());
+}
 
-// var authors = [
-//     {name:'John Doe', age:'22',id:'1'},
-//     {name:'James Smith', age:'24',id:'2'},
-// ];
+function fetchBookByID(id) {
+    return fetchResponseByURL('/volumes/' + id + '?').then(json => {
+        return json;
+    });
+}
 
+function fetchBooksByName(name) {
+    return fetchResponseByURL('/volumes?q=' + name + '&').then(json => {
+        return json.items;
+    });
+}
+
+const ImageLinksType = new GraphQLObjectType({
+    name: 'ImageLinks',
+    fields: () => ({
+        smallThumbnail: {type: GraphQLString},
+        thumbnail: {type: GraphQLString},
+        small: {type: GraphQLString},
+        medium: {type: GraphQLString},
+        large: {type: GraphQLString},
+        extraLarge: {type: GraphQLString}
+    })
+});
+
+const VolumeInfoType = new GraphQLObjectType({
+    name: 'VolumeInfo',
+    fields: () => ({
+        title: {type: GraphQLString},
+        authors: {type: GraphQLList(GraphQLString)},
+        publisher: {type: GraphQLString},
+        publishedDate: {type: GraphQLString},
+        description: {type: GraphQLString},
+        categories: {type: GraphQLList(GraphQLString)},
+        pageCount: {type: GraphQLString},
+        averageRating: {type: GraphQLString},
+        imageLinks: {type: ImageLinksType},
+        language: {type: GraphQLString}
+    })
+});
+
+const GoogleBookType = new GraphQLObjectType({
+    name: 'GoogleBook',
+    fields: () => ({
+        id: {type: GraphQLID},
+        volumeInfo: {type: VolumeInfoType}
+    })
+});
+
+//
+// Mongo DB
+//
 const BookType = new GraphQLObjectType({
     name: 'Book',
     fields: () => ({ // this needs to to be a function because: 
@@ -102,6 +150,23 @@ const RootQuery = new GraphQLObjectType({
                     return [];
                 }
                 return Book.find({name: new RegExp(args.name, 'i')});
+            }
+        },
+        googleBook: {
+            type: GoogleBookType,
+            args: {id: {type: GraphQLNonNull(GraphQLID)}},
+            resolve(parent, args) {
+                return fetchBookByID(args.id);
+            }
+        },
+        googleBookSearch: {
+            type: new GraphQLList(GoogleBookType),
+            args: {name: {type: GraphQLString}},
+            resolve(parent, args) {
+                if(args.name === '' || args.name === undefined) {
+                    return [];
+                }
+                return fetchBooksByName(args.name);
             }
         }
     }
