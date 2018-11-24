@@ -1,15 +1,39 @@
 
 import React, { Component } from 'react';
 import { withApollo } from 'react-apollo';
-import { getBookSearchQuery } from '../queries/queries'
+import { getGoogleBookSearchQuery } from '../queries/queries'
 
 const MATCHING_ITEM_LIMIT = 25;
+
+const INPUT_TIMEOUT = 250;
 
 class BookSearch extends Component {
   state = {
     books: [],
     showRemoveIcon: false,
     searchValue: '',
+  };
+
+  searchBooksWrapper = () => {
+    const searchQuery = this.state.searchValue;
+    this.searchBooks(searchQuery);
+  };
+
+  searchBooks = async (searchQuery) => {
+    if(searchQuery !== '') {
+      const { data } = await this.props.client.query({
+        query: getGoogleBookSearchQuery,
+        variables: { name: searchQuery }
+      });
+
+      if(data) {
+        if(data.googleBookSearch) {
+          this.setState({
+            books: data.googleBookSearch.slice(0, MATCHING_ITEM_LIMIT)
+          });
+        }
+      }
+    }
   };
 
   onSearchChange = (e) => {
@@ -28,7 +52,9 @@ class BookSearch extends Component {
       this.setState({
         showRemoveIcon: true,
       });
-      this.searchBooks(value);
+
+      clearTimeout(this.timeout);
+      this.timeout = setTimeout(this.searchBooksWrapper, INPUT_TIMEOUT);
     }
   };
 
@@ -39,38 +65,26 @@ class BookSearch extends Component {
       searchValue: '',
     });
   };
-  
-  searchBooks = async (searchQuery) => {
-    if(searchQuery !== '') {
-      const { data } = await this.props.client.query({
-        query: getBookSearchQuery,
-        variables: { name: searchQuery }
-      });
-
-      if(data) {
-        this.setState({
-          books: data.bookSearch.slice(0, MATCHING_ITEM_LIMIT)
-        });
-      }
-    }
-  }
 
   renderSearchBook = () => {
     var books = this.state.books;
     if(books) {
-      return books.map((book, idx) => {
+      return books.map((book) => {
         return (
           <tr
-            key={idx}
+            key={book.id}
+            onClick={() => this.props.onBookClick(book)}
           >
             <td>
-              {book.name}
+              {
+                book.volumeInfo.imageLinks !== null ? <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title} /> : ''
+              }
             </td>
             <td>
-              {book.genre}
+              {book.volumeInfo.title}
             </td>
             <td>
-              {book.author.name}
+              {book.volumeInfo.authors ? book.volumeInfo.authors.toString() : ''}
             </td>
           </tr>
           );
@@ -92,7 +106,7 @@ class BookSearch extends Component {
                     <input
                       className='prompt'
                       type='text'
-                      placeholder='Search books...'
+                      placeholder='Search books to add...'
                       value={this.state.searchValue}
                       onChange={this.onSearchChange}
                     />
@@ -112,9 +126,9 @@ class BookSearch extends Component {
               </th>
             </tr>
             <tr>
-              <th className='eight wide'>Name</th>
-              <th>Genre</th>
-              <th>Author</th>
+              {/* <th className='four wide'></th>
+              <th>Book</th>
+              <th>Author(s)</th> */}
             </tr>
           </thead>
           <tbody>

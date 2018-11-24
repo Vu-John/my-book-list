@@ -50,6 +50,40 @@ const getBookSearchQuery = gql`
   }
 `
 
+const getGoogleBookQuery = gql`
+  query($id: ID!) {
+    googleBook(id: $id) {
+      id
+      volumeInfo {
+        title
+        authors
+        description
+        imageLinks {
+          thumbnail
+        }
+      }
+    }
+  }
+`
+
+const getGoogleBookSearchQuery = gql`
+  query($name: String) {
+    googleBookSearch(name: $name) {
+      id
+      volumeInfo {
+        title
+        authors
+        publisher
+        publishedDate
+        description
+        imageLinks {
+          thumbnail
+        }
+      }
+    }
+  }
+`
+
 const addBookMutation = gql`
   mutation($name: String!, $genre: String!, $authorId: ID!) {
     addBook(
@@ -68,5 +102,7 @@ export {
     getBooksQuery,
     getBookQuery,
     getBookSearchQuery,
+    getGoogleBookQuery,
+    getGoogleBookSearchQuery,
     addBookMutation
 }

@@ -1,50 +1,38 @@
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo'; // glue query to component
-import { getBookQuery } from '../queries/queries'
+import { Query } from 'react-apollo'; // glue query to component
+import { getGoogleBookQuery } from '../queries/queries';
 
 class BookDetails extends Component {
-  renderBookDetails = () => {
-    const { book } = this.props.data;
-    if(book) {
-      return(
-        <div>
-          <h2>{book.name}</h2>
-          <p>{book.name}</p>
-          <p>{book.author.name}</p>
-          <p>All books by this author:</p>
-          <ul className="other-books">
-            {
-              book.author.books.map((item) => {
-                return(
-                  <li key={item.id}>{item.name}</li>
-                );
-              })
-            }
-          </ul>
-        </div>
-      );
-    } else {
-      return(
-        <div>No books selected... </div>
-      );
-    }
-  };
+  renderBookDetails = (id) => (
+    <Query query={getGoogleBookQuery} variables={{ id }}>
+      {({ loading, error, data }) => {
+        if (loading) return (
+          <p>Loading...</p>
+        );
+        if (error) return `Error!: ${error}`;
+
+        const book = data.googleBook.volumeInfo
+
+        return (
+          <div>
+            {book.imageLinks ? <img src={book.imageLinks.thumbnail} alt={book.title} /> : ''}
+            <h2>{book.title}</h2>
+            <p>{book.authors.toString()}</p>
+            <p>{book.description}</p>
+          </div>
+        );
+      }}
+    </Query>
+  );
 
   render() {
+    const bookId = this.props.bookId;
     return (
       <div id="book-details">
-        {this.renderBookDetails()}
+        {bookId ? this.renderBookDetails(bookId) : ''}
       </div>
     );
   }
 }
 
-export default graphql(getBookQuery, {
-  options: (props) => {
-    return {
-      variables: {
-        id: props.bookId
-      }
-    }
-  }
-})(BookDetails);
+export default BookDetails;

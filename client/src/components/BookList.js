@@ -8,19 +8,28 @@ import BookSearch from './BookSearch';
 
 class BookList extends Component {
   state = {
-    selected: null
+    selected: null,
+    selectedBooks: []
   };
 
+  handleOnBookClick = (book) => (
+    this.setState({
+      selectedBooks: this.state.selectedBooks.concat(book),
+    })
+  );
+
   renderBooks = () => {
-    var data = this.props.data;
-    if(data.loading) {
-      return (<div>Loading books...</div>);
-    } else {
-      return data.books.map((book) => {
+    var data = this.state.selectedBooks;
+    if(data) {
+      return data.map((book) => {
         return (
-          <li key={book.id} onClick={(e) => {this.setState({selected: book.id})}}>{book.name}</li>
+          <li key={book.id} onClick={(e) => {this.setState({selected: book.id})}}>
+            {book.volumeInfo.imageLinks ? <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title} /> : book.volumeInfo.title}
+          </li>
         );
       });
+    } else {
+      return (<div>Loading books...</div>);
     }
   };
 
@@ -30,7 +39,9 @@ class BookList extends Component {
         <ul id="book-list">
           {this.renderBooks()}
         </ul>
-        <BookSearch />
+        <BookSearch
+          onBookClick={this.handleOnBookClick}
+        />
         <BookDetails 
           bookId = {this.state.selected}
         />
