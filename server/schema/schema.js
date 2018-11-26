@@ -1,7 +1,11 @@
 const graphql = require('graphql');
 const fetch = require('node-fetch');
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+const { getUserId } = require('../utils')
 const Book = require('../models/book');
 const Author = require('../models/author');
+const User = require('../models/user');
 
 const { 
     GraphQLObjectType, 
@@ -71,6 +75,23 @@ const GoogleBookType = new GraphQLObjectType({
 //
 // Mongo DB
 //
+const UserType = new GraphQLObjectType({
+    name: 'User',
+    fields: () => ({
+        id: {type: GraphQLID},
+        name: {type: GraphQLString},
+        email: {type: GraphQLString}
+    })
+});
+
+const AuthPayloadType = new GraphQLObjectType({
+    name: 'AuthPayload',
+    fields: () => ({
+        token: {type: GraphQLString},
+        user: {type: UserType}
+    })
+});
+
 const BookType = new GraphQLObjectType({
     name: 'Book',
     fields: () => ({ // this needs to to be a function because: 
@@ -169,7 +190,7 @@ const RootQuery = new GraphQLObjectType({
     }
 });
 
-const Mutation = new GraphQLObjectType({
+const RootMutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
         addAuthor: {
@@ -193,13 +214,64 @@ const Mutation = new GraphQLObjectType({
                 genre: {type: GraphQLNonNull(GraphQLString)},
                 authorId: {type: GraphQLNonNull(GraphQLID)}
             },
-            resolve(parent, args) {
+            resolve(parent, args, context) {
+                // const userId = getUserId(context);
+                // console.log('USER ID: ' + userId);
                 let book = new Book({
                     name: args.name,
                     genre: args.genre,
                     authorId: args.authorId
                 });
                 return book.save();
+            }
+        },
+        signup: {
+            type: AuthPayloadType,
+            args: {
+                name: {type: GraphQLNonNull(GraphQLString)},
+                email: {type: GraphQLNonNull(GraphQLString)},
+                password: {type: GraphQLNonNull(GraphQLString)}
+            },
+            async resolve(parent, args, context) {
+                const password = await bcrypt.hash(args.password, 10);
+                let user = new User({
+                  ...args, password
+                });
+                
+                user.save();
+              
+                const token = jwt.sign({userId: user.id}, process.env.APP_SECRET);
+
+                return {
+                    token,
+                    user
+                }
+            }
+        },
+        login: {
+            type: AuthPayloadType,
+            args: {
+                email: {type: GraphQLNonNull(GraphQLString)},
+                password: {type: GraphQLNonNull(GraphQLString)}
+            },
+            async resolve(parent, args, context) {
+                const user = await User.findOne({email: args.email});
+
+                if (!user) {
+                    throw new Error('No such user found')
+                }
+
+                const valid = await bcrypt.compare(args.password, user.password)
+                if (!valid) {
+                    throw new Error('Invalid password')
+                }
+
+                const token = jwt.sign({ userId: user.id }, process.env.APP_SECRET);
+
+                return {
+                    token,
+                    user,
+                }
             }
         }
     }
@@ -209,5 +281,5 @@ const Mutation = new GraphQLObjectType({
 // we are defining which query we are allowing the user to use when they are making queries from the front end
 module.exports = new GraphQLSchema({
     query: RootQuery,
-    mutation: Mutation
+    mutation: RootMutation
 });
