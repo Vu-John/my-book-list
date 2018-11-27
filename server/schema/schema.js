@@ -15,7 +15,7 @@ const {
     GraphQLInt,
     GraphQLList,
     GraphQLNonNull
-} = graphql; // grab function from package graphql
+} = graphql;
 
 //
 // Google Books
@@ -94,18 +94,13 @@ const AuthPayloadType = new GraphQLObjectType({
 
 const BookType = new GraphQLObjectType({
     name: 'Book',
-    fields: () => ({ // this needs to to be a function because: 
-        // later on when we have multiple types and they have references to one another than 
-        // unless we wrap those fields into a function one type might not know what another type is
+    fields: () => ({ 
         id: {type: GraphQLID},
         name: {type: GraphQLString},
         genre: {type: GraphQLString},
-        author: { // if user requests for the author inside a request for the book
-            // use the resolve function to tell GraphQL which author corresponds to this book 
+        author: {
             type: AuthorType,
-            resolve(parent, args) { // parent object contains book properties
-                // now from the parent object we can see the author id so now we can use that id to 
-                // find the author for that book
+            resolve(parent, args) {
                 return Author.findById(parent.authorId);
             }
         }
@@ -120,7 +115,7 @@ const AuthorType = new GraphQLObjectType({
        age: {type: GraphQLInt},
        books: {
            type: new GraphQLList(BookType),
-           resolve(parent, args) { // resolve function there for us to grab what we need
+           resolve(parent, args) {
                 return Book.find({authorId: parent.id});
            }
        }
@@ -130,11 +125,10 @@ const AuthorType = new GraphQLObjectType({
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
-        book: { // name of query
-            type: BookType, // type of data we are querying
-            args: {id: {type: GraphQLID}}, // when someone queries this book type than we expect an argument
-            resolve(parent, args) { // function where we write code to get whatever data we need form our db/other source
-                // parent will come into play when we look at relationships between data
+        book: {
+            type: BookType,
+            args: {id: {type: GraphQLID}},
+            resolve(parent, args) {
                 return Book.findById(args.id);
             }
         },
@@ -142,21 +136,18 @@ const RootQuery = new GraphQLObjectType({
             type: AuthorType,
             args: {id: {type: GraphQLID}},
             resolve(parent, args) {
-                // return _.find(authors, {id: args.id});
                 return Author.findById(args.id);
             }
         },
         books: {
             type: new GraphQLList(BookType),
             resolve(parent, args) {
-                // return books
                 return Book.find({});
             }
         },
         authors: {
             type: new GraphQLList(AuthorType),
             resolve(parent, args) {
-                // return authors
                 return Author.find({});
             }
         },
@@ -199,7 +190,8 @@ const RootMutation = new GraphQLObjectType({
                 name: {type: GraphQLNonNull(GraphQLString)},
                 age: {type: GraphQLNonNull(GraphQLInt)}
             },
-            resolve(parent, args) {
+            resolve(parent, args, context) {
+                getUserId(context);
                 let author = new Author({
                     name: args.name,
                     age: args.age
@@ -215,8 +207,7 @@ const RootMutation = new GraphQLObjectType({
                 authorId: {type: GraphQLNonNull(GraphQLID)}
             },
             resolve(parent, args, context) {
-                // const userId = getUserId(context);
-                // console.log('USER ID: ' + userId);
+                getUserId(context);
                 let book = new Book({
                     name: args.name,
                     genre: args.genre,
@@ -277,8 +268,6 @@ const RootMutation = new GraphQLObjectType({
     }
 });
 
-// creating a new schema and we are passing some options into the schema
-// we are defining which query we are allowing the user to use when they are making queries from the front end
 module.exports = new GraphQLSchema({
     query: RootQuery,
     mutation: RootMutation

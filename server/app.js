@@ -9,7 +9,7 @@ require('dotenv').config();
 
 const app = express();
 
-// allow cross-origin requests
+// Allow cross-origin requests
 app.use(cors());
 
 mongoose.connect(process.env.MLAB_URL, { useCreateIndex: true, useNewUrlParser: true });
@@ -18,7 +18,7 @@ mongoose.connection.once('open', () => {
 });
 
 app.use('/graphql', graphqlHTTP({
-    schema, // using ES6 --> instead of schema: schema
+    schema,
     graphiql: true
 }));
 
