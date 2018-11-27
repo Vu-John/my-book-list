@@ -72,6 +72,13 @@ mutation {
 Use the `token` from the login response to query and perform mutations on the data
 
 Example:
+Navigate to the `HTTP HEADERS` tab in the bottom left and add your token.
+```
+{
+  "Authorization": "Bearer <YOUR_JWT_TOKEN>"
+}
+```
+![screen shot 2018-11-27 at 2 46 08 pm](https://user-images.githubusercontent.com/15070059/49107256-362e2000-f253-11e8-98f0-2ad5f1fb3b1d.png)
 
 ```
 mutation {
