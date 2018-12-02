@@ -22,7 +22,7 @@ body {
 }
 
 #book-list{
-  padding: 0;
+  padding-top: 0;
 }
 
 #book-list li{
