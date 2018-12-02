@@ -1,7 +1,5 @@
 ## My-Book-List
-<p align="center">
-  <img src="https://user-images.githubusercontent.com/15070059/49346214-e4bfcf80-f65c-11e8-9d36-b64ef0dd9088.png" title="My Book List" />
-</p>
+<img src="https://user-images.githubusercontent.com/15070059/49346428-636a3c00-f660-11e8-9cd2-24f1ecf28158.png" title="My Book List" />
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/15070059/49104226-7093bf00-f24b-11e8-8dbc-505f8fc08709.png" title="Stack" />
