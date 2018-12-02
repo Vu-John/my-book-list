@@ -1,8 +1,10 @@
 ## My-Book-List
 <p align="center">
-  ![mybooklist](https://user-images.githubusercontent.com/15070059/49346214-e4bfcf80-f65c-11e8-9d36-b64ef0dd9088.png)
+  <img src="https://user-images.githubusercontent.com/15070059/49346214-e4bfcf80-f65c-11e8-9d36-b64ef0dd9088.png" title="My Book List" />
+</p>
 
-  ![mybooklist-stack-3](https://user-images.githubusercontent.com/15070059/49104226-7093bf00-f24b-11e8-8dbc-505f8fc08709.png)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/15070059/49104226-7093bf00-f24b-11e8-8dbc-505f8fc08709.png" title="Stack" />
 </p>
 
 A book tracking application to keep track of books to read. Users are able to search for books in a search bar and add them to their reading list. Book data is obtained from [Google Books API](https://developers.google.com/books/). The front end is built in react with custom components for search autocomplete and book display.
