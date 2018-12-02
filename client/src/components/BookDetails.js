@@ -18,7 +18,8 @@ class BookDetails extends Component {
             {book.imageLinks ? <img src={book.imageLinks.thumbnail} alt={book.title} /> : ''}
             <h2>{book.title}</h2>
             <p>{book.authors.toString()}</p>
-            <p>{book.description}</p>
+            <p dangerouslySetInnerHTML={{ __html: book.description }} />
+            {/* <p>{book.description}</p> */}
           </div>
         );
       }}
@@ -29,6 +30,11 @@ class BookDetails extends Component {
     const bookId = this.props.bookId;
     return (
       <div id="book-details">
+        <i
+          style={{float: 'right'}}
+          className='remove icon'
+          onClick={this.props.onClickClear}
+        />
         {bookId ? this.renderBookDetails(bookId) : ''}
       </div>
     );

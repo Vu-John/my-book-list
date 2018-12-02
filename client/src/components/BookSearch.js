@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react';
-import { withApollo } from 'react-apollo';
-import { getGoogleBookSearchQuery } from '../queries/queries'
+import { withApollo, Mutation } from 'react-apollo';
+import { getGoogleBookSearchQuery, addGBookMutation } from '../queries/queries'
 
 const MATCHING_ITEM_LIMIT = 25;
 
@@ -69,24 +69,40 @@ class BookSearch extends Component {
   renderSearchBook = () => {
     var books = this.state.books;
     if(books) {
-      return books.map((book) => {
+      return books.map((book, id) => {
         return (
-          <tr
-            key={book.id}
-            onClick={() => this.props.onBookClick(book)}
+          <Mutation
+            mutation={addGBookMutation}
+            key={id}
+            onCompleted={data => this._confirm(data)}
           >
-            <td>
-              {
-                book.volumeInfo.imageLinks !== null ? <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title} /> : ''
-              }
-            </td>
-            <td>
-              {book.volumeInfo.title}
-            </td>
-            <td>
-              {book.volumeInfo.authors ? book.volumeInfo.authors.toString() : ''}
-            </td>
-          </tr>
+            {mutation => (
+              <tr
+                key={book.id}
+                onClick={(e, bookId = book.id) => {
+                  e.preventDefault();
+                  mutation({
+                    variables: {
+                      gBookId: bookId,
+                      userId: '5bfb6e06fa31fa95c7179ee7' // hard code user ID for now (using user: alice@graph.cool)
+                    }
+                  });
+                }}
+              >
+                <td>
+                  {
+                    book.volumeInfo.imageLinks !== null ? <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title} /> : ''
+                  }
+                </td>
+                <td>
+                  {book.volumeInfo.title}
+                </td>
+                <td>
+                  {book.volumeInfo.authors ? book.volumeInfo.authors.toString() : ''}
+                </td>
+              </tr>
+            )}
+          </Mutation>
           );
         });
     } else {
@@ -137,6 +153,10 @@ class BookSearch extends Component {
         </table>
       </div>
     );
+  }
+
+  _confirm = async data => {
+    this.props.onReRenderParent();
   }
 }
 

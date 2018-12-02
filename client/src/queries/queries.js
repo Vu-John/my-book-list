@@ -50,6 +50,22 @@ const getBookSearchQuery = gql`
   }
 `
 
+const getGBookQuery = gql`
+  query($userId: ID!) {
+    gBooks(userId: $userId) {
+      id
+      volumeInfo {
+        title
+        authors
+        description
+        imageLinks {
+          thumbnail
+        }
+      }
+    }
+  }
+`
+
 const getGoogleBookQuery = gql`
   query($id: ID!) {
     googleBook(id: $id) {
@@ -97,12 +113,31 @@ const addBookMutation = gql`
   }
 `
 
+const addGBookMutation = gql`
+  mutation($gBookId: ID!, $userId: ID!) {
+    addGBook(
+      gBookId: $gBookId, 
+      userId: $userId
+      ) {
+        id
+        gBookId
+        user {
+          id
+          name
+          email
+        }
+    }
+  }
+`
+
 export {
     getAuthorsQuery,
     getBooksQuery,
     getBookQuery,
     getBookSearchQuery,
+    getGBookQuery,
     getGoogleBookQuery,
     getGoogleBookSearchQuery,
-    addBookMutation
+    addBookMutation,
+    addGBookMutation
 }

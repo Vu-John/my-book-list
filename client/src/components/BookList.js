@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
-import { getBooksQuery } from '../queries/queries'
+import { Query } from 'react-apollo';
+import { getGBookQuery } from '../queries/queries'
 
 // components
 import BookDetails from './BookDetails';
@@ -9,28 +9,40 @@ import BookSearch from './BookSearch';
 class BookList extends Component {
   state = {
     selected: null,
-    selectedBooks: []
   };
 
-  handleOnBookClick = (book) => (
-    this.setState({
-      selectedBooks: this.state.selectedBooks.concat(book),
-    })
-  );
+  handleClearSelected = () => {
+    this.setState({selected: null});
+  }
+
+  handleOnReRenderRequest = () => {
+    this.forceUpdate();
+  };
 
   renderBooks = () => {
-    var data = this.state.selectedBooks;
-    if(data) {
-      return data.map((book) => {
-        return (
-          <li key={book.id} onClick={(e) => {this.setState({selected: book.id})}}>
-            {book.volumeInfo.imageLinks ? <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title} /> : book.volumeInfo.title}
-          </li>
-        );
-      });
-    } else {
-      return (<div>Loading books...</div>);
-    }
+    return (
+      <Query
+        query = {getGBookQuery}
+        fetchPolicy = {'network-only'}
+        variables = {{
+          userId: '5bfb6e06fa31fa95c7179ee7' // hard code user ID for now (using user: alice@graph.cool)
+        }}
+      >
+        {({ loading, error, data }) => {
+            if(data && Object.keys(data).length !== 0) {
+              return data.gBooks.map((book) => {
+                return (
+                  <li key={book.id} onClick={(e) => {this.setState({selected: book.id})}}>
+                    {book.volumeInfo.imageLinks ? <img src={book.volumeInfo.imageLinks.thumbnail} alt={book.volumeInfo.title} /> : book.volumeInfo.title}
+                  </li>
+                );
+              });
+            } else {
+              return (<div>Loading books...</div>);
+            }
+        }}
+      </Query>
+    );
   };
 
   render() {
@@ -40,15 +52,14 @@ class BookList extends Component {
           {this.renderBooks()}
         </ul>
         <BookSearch
-          onBookClick={this.handleOnBookClick}
+          onReRenderParent = {this.handleOnReRenderRequest}
         />
-        <BookDetails 
-          bookId = {this.state.selected}
-        />
+        {
+          this.state.selected ? <BookDetails bookId = {this.state.selected} onClickClear = {this.handleClearSelected} /> : ''
+        }
       </div>
     );
   }
 }
 
-// bind query results to this component's props
-export default graphql(getBooksQuery)(BookList);
+export default BookList;

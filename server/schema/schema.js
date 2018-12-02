@@ -6,6 +6,7 @@ const { getUserId } = require('../utils')
 const Book = require('../models/book');
 const Author = require('../models/author');
 const User = require('../models/user');
+const GBook = require('../models/gBook');
 
 const { 
     GraphQLObjectType, 
@@ -80,7 +81,13 @@ const UserType = new GraphQLObjectType({
     fields: () => ({
         id: {type: GraphQLID},
         name: {type: GraphQLString},
-        email: {type: GraphQLString}
+        email: {type: GraphQLString},
+        books: {
+            type: new GraphQLList(GBookType),
+            resolve(parent, args) {
+                 return Book.find({gBookId: parent.id});
+            }
+        }
     })
 });
 
@@ -122,6 +129,20 @@ const AuthorType = new GraphQLObjectType({
    })
 });
 
+const GBookType = new GraphQLObjectType({
+    name: 'GBook',
+    fields: () => ({
+        id: {type: GraphQLID},
+        gBookId: {type: GraphQLID},
+        user: {
+            type: UserType,
+            resolve(parent, args) {
+                return User.findById(parent.userId)
+            }
+        }
+    })
+});
+
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
@@ -143,6 +164,19 @@ const RootQuery = new GraphQLObjectType({
             type: new GraphQLList(BookType),
             resolve(parent, args) {
                 return Book.find({});
+            }
+        },
+        gBooks: {
+            type: new GraphQLList(GoogleBookType),
+            args: {userId: {type: GraphQLNonNull(GraphQLID)}},
+            async resolve(parent, args) {
+                var googleBooks = [];
+                var gBooks = await GBook.find({userId: args.userId}, 'gBookId');
+                await Promise.all(gBooks.map(async gBook => {
+                    var res = await fetchBookByID(gBook.gBookId);
+                    googleBooks.push(res);
+                }))
+                return googleBooks;
             }
         },
         authors: {
@@ -214,6 +248,26 @@ const RootMutation = new GraphQLObjectType({
                     authorId: args.authorId
                 });
                 return book.save();
+            }
+        },
+        addGBook: {
+            type: GBookType,
+            args: {
+                gBookId: {type: GraphQLNonNull(GraphQLID)},
+                userId: {type: GraphQLNonNull(GraphQLID)},
+            },
+            async resolve(parent, args, context) {
+                // getUserId(context);
+                var alreadyExists = await GBook.findOne({gBookId: args.gBookId, userId: args.userId});
+                if(alreadyExists) {
+                    return null
+                } else {
+                    let gBook = new GBook({
+                        gBookId: args.gBookId,
+                        userId: args.userId
+                    });
+                    return gBook.save();
+                }
             }
         },
         signup: {
